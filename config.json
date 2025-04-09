@@ -1,0 +1,75 @@
+{
+  "data_directory": "data",
+  "model_directory": "models",
+  "output_directory": "output",
+  "sensor_config": {
+    "sampling_rate": 100,
+    "buffer_size": 1000,
+    "filter_cutoff": 20,
+    "filter_order": 4
+  },
+  "processing_config": {
+    "sync_threshold": 0.05,
+    "segment_min_duration": 0.5,
+    "segment_max_duration": 10.0
+  },
+  "model_config": {
+    "movement_classification": {
+      "n_estimators": 100,
+      "max_depth": 10
+    },
+    "technique_quality": {
+      "n_estimators": 100,
+      "learning_rate": 0.1,
+      "max_depth": 5
+    },
+    "injury_risk": {
+      "n_estimators": 100,
+      "learning_rate": 0.05,
+      "max_depth": 4
+    }
+  },
+  "position_config": {
+    "quarterback": {
+      "primary_sensors": ["helmet", "upper_back", "right_upper_arm", "right_forearm"],
+      "primary_metrics": ["arm_speed", "torso_rotation", "follow_through"]
+    },
+    "offensive_lineman": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["leverage", "explosion", "balance"]
+    },
+    "defensive_lineman": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["leverage", "explosion", "balance"]
+    },
+    "wide_receiver": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["route_precision", "acceleration", "catch_stability"]
+    },
+    "running_back": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["acceleration", "change_of_direction", "balance"]
+    },
+    "linebacker": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["change_of_direction", "tackling_form", "pursuit_angle"]
+    },
+    "defensive_back": {
+      "primary_sensors": ["helmet", "upper_back", "pelvis"],
+      "primary_metrics": ["backpedal", "change_of_direction", "coverage_technique"]
+    }
+  },
+  "visualization_config": {
+    "color_scheme": {
+      "primary": "#0052CC",
+      "secondary": "#00B8D9",
+      "success": "#36B37E",
+      "warning": "#FFAB00",
+      "danger": "#FF5630",
+      "text": "#172B4D",
+      "background": "#F4F5F7"
+    },
+    "dashboard_height": 1000,
+    "dashboard_width": 1200
+  }
+}
