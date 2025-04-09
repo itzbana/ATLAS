@@ -434,3 +434,241 @@ class ATLASSystem:
         # For now, extract from data if available
         for frame in data_sequence:
             if "player_id" in frame and frame["player_id"] == player_id:
+                if "position" in frame:
+                    return frame["position"]
+        
+        # Default if not found
+        return "unknown"
+
+
+def run_demo_workflow():
+    """Run a demonstration workflow to show ATLAS capabilities."""
+    print("Starting ATLAS Football Demo Workflow")
+    print("=====================================")
+    
+    # Initialize ATLAS system
+    atlas = ATLASSystem()
+    
+    print("\n1. Setting up data collection session...")
+    # Create data collection session
+    session = atlas.setup_data_collection("Morning Practice", "practice")
+    
+    # Add players
+    qb = atlas.add_player_to_session(session, "QB001", "quarterback")
+    ol1 = atlas.add_player_to_session(session, "OL001", "offensive_lineman")
+    ol2 = atlas.add_player_to_session(session, "OL002", "offensive_lineman")
+    wr1 = atlas.add_player_to_session(session, "WR001", "wide_receiver")
+    
+    print(f"Created session: {session.session_id}")
+    print(f"Added players: QB001, OL001, OL002, WR001")
+    
+    print("\n2. Simulating data collection...")
+    # In a real system, would collect actual sensor data
+    # Here we'll just start and end the session to create file structure
+    session.start_session()
+    
+    # Simulate collecting data for 3 seconds
+    for _ in range(3):
+        session.collect_data_point()
+        time.sleep(0.5)
+    
+    session.end_session()
+    print(f"Collected sample data for session")
+    
+    print("\n3. Processing collected data...")
+    # In a real system, would process the actual collected data
+    # Here we'll demonstrate the workflow with sample data
+    
+    # Create sample data directory for the session
+    session_dir = os.path.join(atlas.data_dir, session.session_id)
+    os.makedirs(session_dir, exist_ok=True)
+    
+    # Create sample data file with synthetic data
+    sample_data = {
+        "session_id": session.session_id,
+        "player_id": "QB001",
+        "position": "quarterback",
+        "timestamp": time.time(),
+        "processed_sensor_data": {
+            "helmet_imu": {
+                "filtered": {
+                    "acceleration": [0.1, 0.2, 9.8],
+                    "angular_velocity": [0.1, 0.2, 0.3]
+                },
+                "orientation": {
+                    "roll": 0.1,
+                    "pitch": 0.2,
+                    "yaw": 0.3
+                }
+            },
+            "right_upper_arm_imu": {
+                "filtered": {
+                    "acceleration": [0.5, 0.6, 0.7],
+                    "angular_velocity": [1.1, 1.2, 1.3]
+                },
+                "orientation": {
+                    "roll": 0.4,
+                    "pitch": 0.5,
+                    "yaw": 0.6
+                }
+            }
+        }
+    }
+    
+    with open(os.path.join(session_dir, "sample_data.json"), 'w') as f:
+        json.dump([sample_data], f, indent=2)
+    
+    # Simulate QB throwing motion data sequence
+    qb_throw_sequence = []
+    
+    # Generate a sequence of frames with simulated throwing motion
+    base_time = time.time()
+    for i in range(20):
+        # Simulate arm movement in throwing motion
+        progress = i / 19  # 0 to 1
+        
+        # Phase 1: Wind-up (0-0.3)
+        # Phase 2: Acceleration (0.3-0.6)
+        # Phase 3: Release (0.6-0.7)
+        # Phase 4: Follow-through (0.7-1.0)
+        
+        # Simplified arm motion simulation
+        if progress < 0.3:
+            # Wind-up: arm moves back
+            arm_angle = -progress * 2
+            arm_vel = -2
+        elif progress < 0.6:
+            # Acceleration: arm moves forward quickly
+            arm_angle = -0.6 + (progress - 0.3) * 3
+            arm_vel = 3
+        elif progress < 0.7:
+            # Release: maximum forward velocity
+            arm_angle = 0.3 + (progress - 0.6) * 2
+            arm_vel = 5
+        else:
+            # Follow-through: deceleration
+            arm_angle = 0.5 + (progress - 0.7) * 1.5
+            arm_vel = 5 * (1 - (progress - 0.7) / 0.3)
+        
+        # Create frame with simulated sensor data
+        frame = {
+            "session_id": session.session_id,
+            "player_id": "QB001",
+            "position": "quarterback",
+            "timestamp": base_time + i * 0.05,  # 20 Hz capture
+            "processed_sensor_data": {
+                "helmet_imu": {
+                    "filtered": {
+                        "acceleration": [0.1, 0.2, 9.8],
+                        "angular_velocity": [0.1, 0.2, 0.3]
+                    },
+                    "orientation": {
+                        "roll": 0.1,
+                        "pitch": 0.2,
+                        "yaw": 0.3 + progress * 0.5  # Head turns slightly during throw
+                    }
+                },
+                "upper_back_imu": {
+                    "filtered": {
+                        "acceleration": [0.3, 0.4, 9.8],
+                        "angular_velocity": [0.1 + progress, 0.2, 0.3]
+                    },
+                    "orientation": {
+                        "roll": 0.1,
+                        "pitch": 0.2,
+                        "yaw": 0.3 + progress * 1.0  # Torso rotation during throw
+                    }
+                },
+                "right_upper_arm_imu": {
+                    "filtered": {
+                        "acceleration": [0.5 + progress * 3, 0.6, 0.7],
+                        "angular_velocity": [arm_vel, 1.2, 1.3]
+                    },
+                    "orientation": {
+                        "roll": 0.4,
+                        "pitch": arm_angle,
+                        "yaw": 0.6 + progress * 0.8
+                    }
+                },
+                "right_forearm_imu": {
+                    "filtered": {
+                        "acceleration": [0.8 + progress * 5, 0.9, 1.0],
+                        "angular_velocity": [arm_vel * 1.5, 1.5, 1.6]
+                    },
+                    "orientation": {
+                        "roll": 0.7,
+                        "pitch": arm_angle * 1.2,
+                        "yaw": 0.9 + progress * 0.8
+                    }
+                }
+            }
+        }
+        
+        qb_throw_sequence.append(frame)
+    
+    print(f"Created sample data sequence for QB throw analysis")
+    
+    print("\n4. Performing technique analysis...")
+    # Analyze QB throwing technique
+    qb_technique_results = atlas.analyze_player_technique(
+        "QB001", "qb_throw", qb_throw_sequence)
+    
+    print("QB Throwing Analysis Results:")
+    print(f"- Metrics: {json.dumps(qb_technique_results.get('metrics', {}), indent=2)}")
+    print(f"- Assessments: {json.dumps(qb_technique_results.get('assessments', {}), indent=2)}")
+    print(f"- Recommendations: {json.dumps(qb_technique_results.get('recommendations', []), indent=2)}")
+    
+    print("\n5. Assessing injury risk...")
+    # Assess injury risk for the QB
+    risk_assessment = atlas.assess_injury_risk("QB001")
+    
+    print("QB Injury Risk Assessment:")
+    print(f"- Overall risk: {risk_assessment.get('general', {}).get('size_vs_position', 0)}")
+    print(f"- Joint risks: {json.dumps(risk_assessment.get('joints', {}), indent=2)}")
+    
+    print("\n6. Generating player reports...")
+    # Generate player dashboard
+    qb_report = atlas.generate_player_report("QB001", "dashboard")
+    print(f"Generated QB performance dashboard: {qb_report}")
+    
+    print("\n7. Generating team report...")
+    # Generate team report
+    team_report = atlas.generate_team_report("Demo Team", ["QB001", "OL001", "OL002", "WR001"])
+    print(f"Generated team dashboard: {team_report}")
+    
+    print("\n8. Visualizing QB throwing mechanics...")
+    # Generate visualization of QB throw
+    viz_output = atlas.viz_generator.generate_movement_visualization(
+        qb_throw_sequence, "quarterback_throw", "qb_throw_visualization.png")
+    print(f"Generated QB throwing visualization: {viz_output}")
+    
+    print("\nDemo workflow completed successfully!")
+    print("Check the output directory for generated reports and visualizations.")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ATLAS Football Analysis System")
+    parser.add_argument("--demo", action="store_true", help="Run demonstration workflow")
+    parser.add_argument("--config", type=str, default="config.json", help="Path to configuration file")
+    parser.add_argument("--session", type=str, help="Process a specific session")
+    parser.add_argument("--player", type=str, help="Generate report for a specific player")
+    parser.add_argument("--team", type=str, help="Generate report for a team")
+    
+    args = parser.parse_args()
+    
+    if args.demo:
+        run_demo_workflow()
+    elif args.session:
+        atlas = ATLASSystem(args.config)
+        atlas.process_session_data(args.session)
+    elif args.player:
+        atlas = ATLASSystem(args.config)
+        atlas.generate_player_report(args.player)
+    elif args.team:
+        atlas = ATLASSystem(args.config)
+        # Would need to specify players in a real implementation
+        player_ids = []  # Would load from database or config
+        atlas.generate_team_report(args.team, player_ids)
+    else:
+        print("No action specified. Use --demo to run demonstration or specify other actions.")
+        parser.print_help()
